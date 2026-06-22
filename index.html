@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADK - Premium Digital Agency</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#0B0B0B",
+                        secondary: "#111827",
+                        accent: "#3B82F6",
+                        highlight: "#00E5FF",
+                        text: "#F8FAFC",
+                        muted: "#94A3B8",
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Inter Tight', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        html { scroll-behavior: smooth; }
+        body { background-color: #0B0B0B; cursor: none; } /* Hidden default cursor for custom one */
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0B0B0B; }
+        ::-webkit-scrollbar-thumb { background: #3B82F6; border-radius: 10px; }
+        ::selection { background: #00E5FF; color: #0B0B0B; }
+
+        /* Gamified Scroll Progress Bar */
+        #scroll-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            width: 0%;
+            background: linear-gradient(90deg, #3B82F6, #00E5FF);
+            z-index: 100;
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.7);
+        }
+
+        /* Custom Cursor */
+        #cursor-dot {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 8px;
+            height: 8px;
+            background: #00E5FF;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: width 0.2s ease, height 0.2s ease, background 0.2s ease;
+            mix-blend-mode: difference;
+        }
+        #cursor-dot.hovering {
+            width: 40px;
+            height: 40px;
+            background: #F8FAFC;
+        }
+
+        /* Grid Background */
+        .bg-grid {
+            background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.05) 1px, transparent 0);
+            background-size: 40px 40px;
+        }
+
+        /* Text Gradient */
+        .text-gradient {
+            background: linear-gradient(to right, #F8FAFC, #94A3B8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Marquee Animation */
+        @keyframes marquee {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-100%); }
+        }
+        .animate-marquee { animation: marquee 40s linear infinite; }
+
+        /* Glow Animation */
+        @keyframes glow {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+        .animate-glow { animation: glow 3s ease-in-out infinite; }
+
+        /* 3D Hero Canvas */
+        #hero-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            opacity: 0.6;
+        }
+
+        /* Bento Grid Hover Effects */
+        .bento-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .bento-card:hover {
+            background-color: #16213c;
+            transform: translateY(-2px) scale(1.01);
+        }
+
+        /* Process Bubbles Hover & Active States */
+        .process-bubble {
+            transition: all 0.4s ease;
+            box-shadow: 0 0 0 rgba(0, 229, 255, 0);
+        }
+        .process-bubble:hover {
+            border-color: #00E5FF !important;
+            background: #16213c;
+            box-shadow: 0 0 30px rgba(0, 229, 255, 0.4);
+            transform: translateY(-5px);
+        }
+        .process-bubble.active {
+            border-color: #00E5FF !important;
+            background: #3B82F6 !important;
+            box-shadow: 0 0 25px rgba(59, 130, 246, 0.6);
+            transform: scale(1.1);
+        }
+
+        /* Magnetic Buttons */
+        .magnetic {
+            transition: transform 0.2s ease-out;
+        }
+    </style>
+</head>
+<body class="font-sans text-text antialiased">
+
+    <!-- Scroll Progress -->
+    <div id="scroll-progress"></div>
+    <!-- Custom Cursor -->
+    <div id="cursor-dot"></div>
+
+    <!-- Navbar -->
+    <nav id="navbar" class="fixed top-0 w-full z-50 transition-all duration-500 bg-transparent">
+        <div class="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
+            <div class="text-2xl font-display font-bold tracking-tighter">
+                ADK<span class="text-accent">.</span>
+            </div>
+            <div class="hidden md:flex gap-10 text-sm text-muted font-medium">
+                <a href="#about" class="hover:text-text transition-colors">About</a>
+                <a href="#services" class="hover:text-text transition-colors">Services</a>
+                <a href="#work" class="hover:text-text transition-colors">Work</a>
+                <a href="#process" class="hover:text-text transition-colors">Process</a>
+            </div>
+            <a href="#contact" class="magnetic px-5 py-2.5 bg-text text-primary text-sm font-semibold rounded-full hover:bg-highlight transition-colors">
+                Book a Call
+            </a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative min-h-screen flex flex-col justify-center bg-grid overflow-hidden">
+        <canvas id="hero-canvas"></canvas>
+        <div class="absolute inset-0 z-10 bg-gradient-to-b from-primary/10 via-primary/40 to-primary pointer-events-none"></div>
+
+        <div class="relative z-20 max-w-7xl mx-auto px-6 pt-32 pb-16">
+            <div class="reveal inline-flex items-center gap-2 px-4 py-2 bg-secondary border border-white/10 rounded-full text-xs text-muted mb-8">
+                <span class="w-2 h-2 bg-highlight rounded-full animate-glow"></span>
+                Available for Q3 2024 Engagements
+            </div>
+
+            <h1 class="reveal font-display text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter leading-[0.9] max-w-5xl">
+                Building Digital Products That <span class="text-gradient italic font-medium">Scale</span> Businesses.
+            </h1>
+
+            <p class="reveal mt-8 text-lg md:text-xl text-muted max-w-2xl font-light leading-relaxed">
+                From websites and SaaS platforms to AI-powered workflows and intelligent agents, ADK helps ambitious companies turn ideas into market-leading products.
+            </p>
+
+            <div class="reveal mt-12 flex flex-wrap gap-4">
+                <a href="#contact" class="magnetic px-8 py-4 bg-accent hover:bg-highlight text-white font-semibold rounded-full transition-all duration-300 hover:scale-105">
+                    Book a Discovery Call
+                </a>
+                <a href="#work" class="magnetic px-8 py-4 bg-transparent border border-white/20 hover:border-white/50 text-text font-semibold rounded-full transition-all duration-300">
+                    View Our Work
+                </a>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mt-24 border-t border-white/10 pt-8">
+                <div class="reveal">
+                    <div class="text-3xl font-display font-bold text-text">50+</div>
+                    <div class="text-sm text-muted mt-1">Projects Delivered</div>
+                </div>
+                <div class="reveal">
+                    <div class="text-3xl font-display font-bold text-text">3+</div>
+                    <div class="text-sm text-muted mt-1">Years Experience</div>
+                </div>
+                <div class="reveal">
+                    <div class="text-3xl font-display font-bold text-text">Global</div>
+                    <div class="text-sm text-muted mt-1">Clientele</div>
+                </div>
+                <div class="reveal">
+                    <div class="text-3xl font-display font-bold text-text">End-to-End</div>
+                    <div class="text-sm text-muted mt-1">Development</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="relative py-32 px-6 bg-primary border-t border-white/5 overflow-hidden">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div>
+                <div class="text-accent text-sm font-mono mb-4 tracking-widest reveal">[ 00 ] ABOUT US</div>
+                <h2 class="reveal text-4xl md:text-6xl font-display font-bold tracking-tighter mb-8">
+                    Who We Are
+                </h2>
+                <p class="reveal text-lg text-muted font-light leading-relaxed mb-8">
+                    ADK is a full-service digital innovation agency helping startups, enterprises, and growing businesses launch exceptional digital experiences and scalable software solutions.
+                </p>
+            </div>
+            
+            <!-- Founder Image with Code Overlay -->
+            <div class="reveal relative h-[600px]">
+                <!-- Background Image -->
+                <div class="absolute top-0 right-0 w-3/4 h-3/4 rounded-3xl overflow-hidden border border-white/10 group">
+                    <div class="absolute inset-0 bg-gradient-to-t from-primary to-transparent z-10"></div>
+                    <!-- // Add Founder Photo Here -->
+                    <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=800&auto=format&fit=crop" alt="Founder" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 scale-105">
+                </div>
+                
+                <!-- Glowing Abstract Element -->
+                <div class="absolute bottom-0 left-0 w-1/2 h-1/2 bg-accent/10 rounded-full blur-3xl animate-glow"></div>
+
+                <!-- Code Block Overlay -->
+                <div class="absolute bottom-10 left-0 w-2/3 bg-secondary border border-white/10 rounded-2xl p-6 font-mono text-sm backdrop-blur-md shadow-2xl z-20">
+                    <div class="flex items-center gap-2 mb-4 text-muted">
+                        <div class="w-3 h-3 rounded-full bg-red-500/50"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500/50"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500/50"></div>
+                        <span class="ml-2 text-xs">founder.config</span>
+                    </div>
+                    <div class="space-y-2 text-muted">
+                        <div><span class="text-highlight">const</span> founder = <span class="text-accent">"</span><!-- Replace with Founder Name -->John Doe<span class="text-accent">"</span>;</div>
+                        <div><span class="text-highlight">const</span> email = <span class="text-accent">"</span><!-- Replace with Agency Email -->hello@adk.com<span class="text-accent">"</span>;</div>
+                        <div><span class="text-highlight">const</span> phone = <span class="text-accent">"</span><!-- Replace with Contact Number -->+1 (555) 000-0000<span class="text-accent">"</span>;</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section (Bento Grid) -->
+    <section id="services" class="relative py-32 px-6 bg-primary border-t border-white/5">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-16">
+                <div>
+                    <div class="text-accent text-sm font-mono mb-4 tracking-widest reveal">[ 01 ] SERVICES</div>
+                    <h2 class="reveal text-4xl md:text-6xl font-display font-bold tracking-tighter">
+                        Capabilities & Expertise
+                    </h2>
+                </div>
+                <p class="reveal text-muted max-w-md mt-4 md:mt-0 text-lg font-light">
+                    We deploy elite-level engineering and design to build systems that drive enterprise value.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 auto-rows-[180px] gap-4">
+                <div class="bento-card reveal group relative p-8 rounded-3xl border border-white/10 bg-secondary md:col-span-2 lg:col-span-2 row-span-2 cursor-pointer overflow-hidden">
+                    <div class="absolute -bottom-16 -right-16 w-48 h-48 bg-accent/20 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+                    <div class="relative z-10 flex flex-col h-full justify-between">
+                        <div class="flex justify-end">
+                            <i data-lucide="arrow-up-right" class="w-6 h-6 text-muted group-hover:text-highlight group-hover:rotate-45 transition-all duration-300"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-display font-bold tracking-tight text-3xl md:text-4xl mb-2">Business Websites</h3>
+                            <p class="text-muted text-sm md:text-base font-light">High-performance corporate and brand websites.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bento-card reveal group relative p-8 rounded-3xl border border-white/10 bg-secondary md:col-span-1 lg:col-span-2 row-span-1 cursor-pointer overflow-hidden">
+                    <div class="absolute -bottom-16 -right-16 w-48 h-48 bg-highlight/20 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+                    <div class="relative z-10 flex flex-col h-full justify-between">
+                        <div class="flex justify-end">
+                            <i data-lucide="arrow-up-right" class="w-6 h-6 text-muted group-hover:text-highlight group-hover:rotate-45 transition-all duration-300"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-display font-bold tracking-tight text-xl md:text-2xl mb-2">Custom Web Applications</h3>
+                            <p class="text-muted text-sm font-light">Tailored software solutions for businesses.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bento-card reveal group relative p-8 rounded-3xl border border-white/10 bg-secondary col-span-1 row-span-1 cursor-pointer overflow-hidden">
+                    <div class="relative z-10 flex flex-col h-full justify-between">
+                        <div class="flex justify-end">
+                            <i data-lucide="arrow-up-right" class="w-6 h-6 text-muted group-hover:text-highlight group-hover:rotate-45 transition-all duration-300"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-display font-bold tracking-tight text-xl mb-2">UI/UX Design</h3>
+                            <p class="text-muted text-sm font-light">User-centric product experiences.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bento-card reveal group relative p-8 rounded-3xl border border-white/10 bg-secondary col-span-1 row-span-1 cursor-pointer overflow-hidden">
+                    <div class="relative z-10 flex flex-col h-full justify-between">
+                        <div class="flex justify-end">
+                            <i data-lucide="arrow-up-right" class="w-6 h-6 text-muted group-hover:text-highlight group-hover:rotate-45 transition-all duration-300"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-display font-bold tracking-tight text-xl mb-2">AI Workflows</h3>
+                            <p class="text-muted text-sm font-light">Automated AI-powered processes.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bento-card reveal group relative p-8 rounded-3xl border border-white/10 bg-secondary md:col-span-2 lg:col-span-2 row-span-2 cursor-pointer overflow-hidden">
+                    <div class="absolute -bottom-16 -right-16 w-48 h-48 bg-accent/20 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+                    <div class="relative z-10 flex flex-col h-full justify-between">
+                        <div class="flex justify-end">
+                            <i data-lucide="arrow-up-right" class="w-6 h-6 text-muted group-hover:text-highlight group-hover:rotate-45 transition-all duration-300"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-display font-bold tracking-tight text-3xl md:text-4xl mb-2">AI Agents</h3>
+                            <p class="text-muted text-sm md:text-base font-light">Custom intelligent agents for operations and support.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bento-card reveal group relative p-8 rounded-3xl border border-white/10 bg-secondary md:col-span-1 lg:col-span-2 row-span-1 cursor-pointer overflow-hidden">
+                    <div class="relative z-10 flex flex-col h-full justify-between">
+                        <div class="flex justify-end">
+                            <i data-lucide="arrow-up-right" class="w-6 h-6 text-muted group-hover:text-highlight group-hover:rotate-45 transition-all duration-300"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-display font-bold tracking-tight text-xl md:text-2xl mb-2">SaaS Development</h3>
+                            <p class="text-muted text-sm font-light">Scalable multi-tenant SaaS platforms.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bento-card reveal group relative p-8 rounded-3xl border border-white/10 bg-secondary col-span-1 row-span-1 cursor-pointer overflow-hidden">
+                    <div class="relative z-10 flex flex-col h-full justify-between">
+                        <div class="flex justify-end">
+                            <i data-lucide="arrow-up-right" class="w-6 h-6 text-muted group-hover:text-highlight group-hover:rotate-45 transition-all duration-300"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-display font-bold tracking-tight text-xl mb-2">MVP Development</h3>
+                            <p class="text-muted text-sm font-light">Rapid startup product development.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bento-card reveal group relative p-8 rounded-3xl border border-white/10 bg-secondary col-span-1 row-span-1 cursor-pointer overflow-hidden">
+                    <div class="relative z-10 flex flex-col h-full justify-between">
+                        <div class="flex justify-end">
+                            <i data-lucide="arrow-up-right" class="w-6 h-6 text-muted group-hover:text-highlight group-hover:rotate-45 transition-all duration-300"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-display font-bold tracking-tight text-xl mb-2">Product Strategy</h3>
+                            <p class="text-muted text-sm font-light">Technical consulting and planning.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Portfolio Section -->
+    <section id="work" class="relative py-32 px-6 bg-secondary border-t border-white/5">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-16">
+                <div>
+                    <div class="text-accent text-sm font-mono mb-4 tracking-widest reveal">[ 02 ] SELECTED WORK</div>
+                    <h2 class="reveal text-4xl md:text-6xl font-display font-bold tracking-tighter">
+                        Case Studies
+                    </h2>
+                </div>
+                <p class="reveal text-muted max-w-md mt-4 md:mt-0 text-lg font-light">
+                    A showcase of projects delivered across industries.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Card 1 -->
+                <div class="reveal group relative rounded-3xl border border-white/10 bg-primary overflow-hidden aspect-[4/3] cursor-pointer">
+                    <div class="absolute inset-0 bg-gradient-to-br from-accent/20 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <!-- // Add Project Thumbnail Here -->
+                    <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=800&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700" alt="Fintech SaaS">
+                    <div class="absolute inset-0 bg-gradient-to-t from-primary via-primary/50 to-transparent z-20"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-8 z-30 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                        <!-- // Add Project Name Here -->
+                        <h3 class="text-2xl font-display font-bold text-text">Fintech SaaS Platform</h3>
+                        <!-- // Add Project Description Here -->
+                        <p class="text-muted text-sm font-light mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 max-h-0 group-hover:max-h-20 overflow-hidden">
+                            A scalable multi-tenant platform processing millions in transactions.
+                        </p>
+                        <!-- // Add Project Link Here -->
+                        <a href="#" class="inline-flex items-center gap-2 mt-4 text-sm text-highlight opacity-0 group-hover:opacity-100 transition-opacity">
+                            View Case Study <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="reveal group relative rounded-3xl border border-white/10 bg-primary overflow-hidden aspect-[4/3] cursor-pointer">
+                    <div class="absolute inset-0 bg-gradient-to-br from-highlight/20 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <img src="https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=800&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700" alt="AI Operations">
+                    <div class="absolute inset-0 bg-gradient-to-t from-primary via-primary/50 to-transparent z-20"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-8 z-30 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                        <h3 class="text-2xl font-display font-bold text-text">AI Operations Agent</h3>
+                        <p class="text-muted text-sm font-light mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 max-h-0 group-hover:max-h-20 overflow-hidden">
+                            Custom intelligent agent automating 80% of operational workflows.
+                        </p>
+                        <a href="#" class="inline-flex items-center gap-2 mt-4 text-sm text-highlight opacity-0 group-hover:opacity-100 transition-opacity">
+                            View Case Study <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="reveal group relative rounded-3xl border border-white/10 bg-primary overflow-hidden aspect-[4/3] cursor-pointer">
+                    <div class="absolute inset-0 bg-gradient-to-br from-accent/20 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?q=80&w=800&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700" alt="E-commerce">
+                    <div class="absolute inset-0 bg-gradient-to-t from-primary via-primary/50 to-transparent z-20"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-8 z-30 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                        <h3 class="text-2xl font-display font-bold text-text">Enterprise E-commerce</h3>
+                        <p class="text-muted text-sm font-light mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 max-h-0 group-hover:max-h-20 overflow-hidden">
+                            High-performance custom web application handling global traffic.
+                        </p>
+                        <a href="#" class="inline-flex items-center gap-2 mt-4 text-sm text-highlight opacity-0 group-hover:opacity-100 transition-opacity">
+                            View Case Study <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="reveal group relative rounded-3xl border border-white/10 bg-primary overflow-hidden aspect-[4/3] cursor-pointer">
+                    <div class="absolute inset-0 bg-gradient-to-br from-highlight/20 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <img src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=800&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700" alt="Healthcare MVP">
+                    <div class="absolute inset-0 bg-gradient-to-t from-primary via-primary/50 to-transparent z-20"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-8 z-30 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                        <h3 class="text-2xl font-display font-bold text-text">Healthcare MVP</h3>
+                        <p class="text-muted text-sm font-light mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 max-h-0 group-hover:max-h-20 overflow-hidden">
+                            Rapid startup product development for Series A funding round.
+                        </p>
+                        <a href="#" class="inline-flex items-center gap-2 mt-4 text-sm text-highlight opacity-0 group-hover:opacity-100 transition-opacity">
+                            View Case Study <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Achievements Section (Count Up Animation) -->
+    <section class="relative py-32 px-6 bg-primary border-t border-white/5 overflow-hidden">
+        <div class="max-w-7xl mx-auto text-center">
+            <div class="text-accent text-sm font-mono mb-4 tracking-widest reveal">[ 03 ] IMPACT BY NUMBERS</div>
+            <h2 class="reveal text-4xl md:text-6xl font-display font-bold tracking-tighter mb-20">
+                Driving Measurable Results
+            </h2>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+                <div class="reveal border-l border-white/10 pl-6 text-left">
+                    <div data-target="50" class="count-up text-5xl md:text-6xl font-display font-bold text-text mb-2">0</div>
+                    <div class="text-muted text-sm uppercase tracking-widest">Projects Delivered</div>
+                </div>
+                <div class="reveal border-l border-white/10 pl-6 text-left">
+                    <div data-target="3" class="count-up text-5xl md:text-6xl font-display font-bold text-text mb-2">0</div>
+                    <div class="text-muted text-sm uppercase tracking-widest">Years Experience</div>
+                </div>
+                <div class="reveal border-l border-white/10 pl-6 text-left">
+                    <div data-target="100" class="count-up text-5xl md:text-6xl font-display font-bold text-text mb-2">0</div>
+                    <div class="text-muted text-sm uppercase tracking-widest">Client Satisfaction</div>
+                </div>
+                <div class="reveal border-l border-white/10 pl-6 text-left">
+                    <div data-target="12" class="count-up text-5xl md:text-6xl font-display font-bold text-text mb-2">0</div>
+                    <div class="text-muted text-sm uppercase tracking-widest">Industries Served</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Process Section (Gamified Timeline) -->
+    <section id="process" class="relative py-32 px-6 bg-primary overflow-hidden border-t border-white/5">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-accent text-sm font-mono mb-4 tracking-widest reveal">[ 04 ] PROCESS</div>
+            <h2 class="reveal text-4xl md:text-6xl font-display font-bold tracking-tighter mb-20">
+                A Proven Execution Framework
+            </h2>
+            
+            <div class="relative">
+                <div class="absolute top-8 left-0 w-full h-px bg-white/10"></div>
+                <div id="process-line" class="absolute top-8 left-0 h-px bg-gradient-to-r from-accent to-highlight" style="width: 0%;"></div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-8">
+                    <div class="reveal relative process-step" data-index="0">
+                        <div class="process-bubble w-16 h-16 rounded-full border-2 flex items-center justify-center mb-6 bg-secondary border-white/20"><span class="text-xl font-bold">01</span></div>
+                        <h3 class="font-display font-semibold text-lg">Discovery</h3>
+                    </div>
+                    <div class="reveal relative process-step" data-index="1">
+                        <div class="process-bubble w-16 h-16 rounded-full border-2 flex items-center justify-center mb-6 bg-secondary border-white/20"><span class="text-xl font-bold">02</span></div>
+                        <h3 class="font-display font-semibold text-lg">Strategy</h3>
+                    </div>
+                    <div class="reveal relative process-step" data-index="2">
+                        <div class="process-bubble w-16 h-16 rounded-full border-2 flex items-center justify-center mb-6 bg-secondary border-white/20"><span class="text-xl font-bold">03</span></div>
+                        <h3 class="font-display font-semibold text-lg">Design</h3>
+                    </div>
+                    <div class="reveal relative process-step" data-index="3">
+                        <div class="process-bubble w-16 h-16 rounded-full border-2 flex items-center justify-center mb-6 bg-secondary border-white/20"><span class="text-xl font-bold">04</span></div>
+                        <h3 class="font-display font-semibold text-lg">Development</h3>
+                    </div>
+                    <div class="reveal relative process-step" data-index="4">
+                        <div class="process-bubble w-16 h-16 rounded-full border-2 flex items-center justify-center mb-6 bg-secondary border-white/20"><span class="text-xl font-bold">05</span></div>
+                        <h3 class="font-display font-semibold text-lg">Testing</h3>
+                    </div>
+                    <div class="reveal relative process-step" data-index="5">
+                        <div class="process-bubble w-16 h-16 rounded-full border-2 flex items-center justify-center mb-6 bg-secondary border-white/20"><span class="text-xl font-bold">06</span></div>
+                        <h3 class="font-display font-semibold text-lg">Launch</h3>
+                    </div>
+                    <div class="reveal relative process-step" data-index="6">
+                        <div class="process-bubble w-16 h-16 rounded-full border-2 flex items-center justify-center mb-6 bg-secondary border-white/20"><span class="text-xl font-bold">07</span></div>
+                        <h3 class="font-display font-semibold text-lg">Optimization</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technologies Marquee -->
+    <section class="py-24 border-y border-white/5 bg-secondary overflow-hidden">
+        <div class="text-center mb-12 px-6">
+            <h2 class="text-3xl md:text-5xl font-display font-bold tracking-tighter">
+                Enterprise-Grade Technology Stack
+            </h2>
+        </div>
+        <div class="relative flex overflow-hidden">
+            <div class="flex animate-marquee whitespace-nowrap">
+                <span class="mx-8 text-4xl md:text-6xl font-display font-bold text-white/10 hover:text-highlight transition-colors duration-300 cursor-default">React</span>
+                <span class="mx-8 text-4xl md:text-6xl font-display font-bold text-white/10 hover:text-highlight transition-colors duration-300 cursor-default">Next.js</span>
+                <span class="mx-8 text-4xl md:text-6xl font-display font-bold text-white/10 hover:text-highlight transition-colors duration-300 cursor-default">Node.js</span>
+                <span class="mx-8 text-4xl md:text-6xl font-display font-bold text-white/10 hover:text-highlight transition-colors duration-300 cursor-default">TypeScript</span>
+                <span class="mx-8 text-4xl md:text-6xl font-display font-bold text-white/10 hover:text-highlight transition-colors duration-300 cursor-default">AWS</span>
+                <span class="mx-8 text-4xl md:text-6xl font-display font-bold text-white/10 hover:text-highlight transition-colors duration-300 cursor-default">OpenAI</span>
+                <span class="mx-8 text-4xl md:text-6xl font-display font-bold text-white/10 hover:text-highlight transition-colors duration-300 cursor-default">Supabase</span>
+                <span class="mx-8 text-4xl md:text-6xl font-display font-bold text-white/10 hover:text-highlight transition-colors duration-300 cursor-default">React</span>
+                <span class="mx-8 text-4xl md:text-6xl font-display font-bold text-white/10 hover:text-highlight transition-colors duration-300 cursor-default">Next.js</span>
+                <span class="mx-8 text-4xl md:text-6xl font-display font-bold text-white/10 hover:text-highlight transition-colors duration-300 cursor-default">Node.js</span>
+                <span class="mx-8 text-4xl md:text-6xl font-display font-bold text-white/10 hover:text-highlight transition-colors duration-300 cursor-default">TypeScript</span>
+                <span class="mx-8 text-4xl md:text-6xl font-display font-bold text-white/10 hover:text-highlight transition-colors duration-300 cursor-default">AWS</span>
+                <span class="mx-8 text-4xl md:text-6xl font-display font-bold text-white/10 hover:text-highlight transition-colors duration-300 cursor-default">OpenAI</span>
+                <span class="mx-8 text-4xl md:text-6xl font-display font-bold text-white/10 hover:text-highlight transition-colors duration-300 cursor-default">Supabase</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="relative py-32 px-6 bg-secondary border-t border-white/5">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-accent text-sm font-mono mb-4 tracking-widest reveal">[ 05 ] CLIENT FEEDBACK</div>
+            <h2 class="reveal text-4xl md:text-6xl font-display font-bold tracking-tighter mb-20">
+                Trusted by Industry Leaders
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="reveal p-8 rounded-3xl border border-white/10 bg-primary hover:border-highlight/30 transition-colors duration-500">
+                    <i data-lucide="quote" class="w-10 h-10 text-highlight/20 mb-6"></i>
+                    <p class="text-xl font-light text-text leading-relaxed mb-8">
+                        "ADK transformed our vision into a polished product that exceeded expectations."
+                    </p>
+                    <div class="flex items-center gap-4 pt-6 border-t border-white/10">
+                        <div class="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center font-bold text-highlight">ST</div>
+                        <div>
+                            <div class="font-semibold text-text">Sarah Thompson</div>
+                            <div class="text-sm text-muted">CEO, Fintech Startup</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reveal p-8 rounded-3xl border border-white/10 bg-primary hover:border-highlight/30 transition-colors duration-500">
+                    <i data-lucide="quote" class="w-10 h-10 text-highlight/20 mb-6"></i>
+                    <p class="text-xl font-light text-text leading-relaxed mb-8">
+                        "Their technical execution and design quality were exceptional."
+                    </p>
+                    <div class="flex items-center gap-4 pt-6 border-t border-white/10">
+                        <div class="w-12 h-12 rounded-full bg-highlight/20 flex items-center justify-center font-bold text-highlight">MR</div>
+                        <div>
+                            <div class="font-semibold text-text">Michael Reed</div>
+                            <div class="text-sm text-muted">Founder, SaaS Company</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reveal p-8 rounded-3xl border border-white/10 bg-primary hover:border-highlight/30 transition-colors duration-500">
+                    <i data-lucide="quote" class="w-10 h-10 text-highlight/20 mb-6"></i>
+                    <p class="text-xl font-light text-text leading-relaxed mb-8">
+                        "The AI automation systems delivered measurable efficiency gains."
+                    </p>
+                    <div class="flex items-center gap-4 pt-6 border-t border-white/10">
+                        <div class="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center font-bold text-highlight">JW</div>
+                        <div>
+                            <div class="font-semibold text-text">James Walker</div>
+                            <div class="text-sm text-muted">Operations Director</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reveal p-8 rounded-3xl border border-white/10 bg-primary hover:border-highlight/30 transition-colors duration-500">
+                    <i data-lucide="quote" class="w-10 h-10 text-highlight/20 mb-6"></i>
+                    <p class="text-xl font-light text-text leading-relaxed mb-8">
+                        "Professional, responsive, and highly skilled team."
+                    </p>
+                    <div class="flex items-center gap-4 pt-6 border-t border-white/10">
+                        <div class="w-12 h-12 rounded-full bg-highlight/20 flex items-center justify-center font-bold text-highlight">ER</div>
+                        <div>
+                            <div class="font-semibold text-text">Emma Rodriguez</div>
+                            <div class="text-sm text-muted">Product Lead</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="relative py-32 px-6 bg-primary overflow-hidden border-t border-white/5">
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-accent/10 rounded-full blur-3xl"></div>
+        <div class="relative z-10 max-w-4xl mx-auto text-center">
+            <div class="reveal text-accent text-sm font-mono mb-4 tracking-widest">[ 06 ] CONTACT</div>
+            <h2 class="reveal text-5xl md:text-7xl font-display font-bold tracking-tighter mb-8">
+                Let's Build Something Exceptional
+            </h2>
+            <p class="reveal text-lg text-muted mb-12 max-w-2xl mx-auto font-light">
+                Have a project in mind? Reach out and let's discuss how ADK can help bring it to life.
+            </p>
+            <div class="reveal flex flex-col items-center gap-6">
+                <a href="mailto:hello@adk.com" class="text-2xl md:text-4xl font-display font-semibold hover:text-highlight transition-colors">
+                    hello@adk.com
+                </a>
+                <div class="flex gap-4 mt-8">
+                    <a href="#" class="px-6 py-3 border border-white/20 rounded-full hover:border-highlight hover:text-highlight transition-colors">LinkedIn</a>
+                    <a href="#" class="px-6 py-3 border border-white/20 rounded-full hover:border-highlight hover:text-highlight transition-colors">Calendly</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="relative pt-20 pb-12 px-6 bg-primary border-t border-white/10 overflow-hidden">
+        <div class="absolute bottom-0 left-0 right-0 h-96 bg-gradient-to-t from-accent/5 to-transparent pointer-events-none"></div>
+        <div class="max-w-7xl mx-auto relative z-10">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 mb-16">
+                <div class="md:col-span-2">
+                    <div class="text-5xl md:text-7xl font-display font-bold tracking-tighter mb-4">ADK<span class="text-accent">.</span></div>
+                    <p class="text-muted font-light max-w-md text-lg">Building products that create impact.</p>
+                </div>
+                <div class="flex flex-col gap-4">
+                    <div class="text-sm text-muted uppercase tracking-widest mb-2 font-mono">// Add social links here</div>
+                    <a href="#" class="text-text hover:text-highlight transition-colors w-fit flex items-center gap-2">
+                        LinkedIn <i data-lucide="external-link" class="w-3 h-3"></i>
+                    </a>
+                    <a href="#" class="text-text hover:text-highlight transition-colors w-fit flex items-center gap-2">
+                        Twitter <i data-lucide="external-link" class="w-3 h-3"></i>
+                    </a>
+                    <a href="#" class="text-text hover:text-highlight transition-colors w-fit flex items-center gap-2">
+                        Dribbble <i data-lucide="external-link" class="w-3 h-3"></i>
+                    </a>
+                    <a href="mailto:hello@adk.com" class="text-text hover:text-highlight transition-colors w-fit flex items-center gap-2">
+                        Email <i data-lucide="external-link" class="w-3 h-3"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted">
+                <div>© 2024 ADK Agency. All rights reserved.</div>
+                <div class="flex gap-6">
+                    <a href="#" class="hover:text-text transition-colors">Privacy Policy</a>
+                    <a href="#" class="hover:text-text transition-colors">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Three.js & GSAP Scripts -->
+    <script type="module">
+        import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+
+        lucide.createIcons();
+
+        // --- Custom Cursor Logic ---
+        const cursorDot = document.getElementById('cursor-dot');
+        window.addEventListener('mousemove', (e) => {
+            cursorDot.style.left = e.clientX + 'px';
+            cursorDot.style.top = e.clientY + 'px';
+        });
+        document.querySelectorAll('a, button, .bento-card, .process-bubble').forEach(el => {
+            el.addEventListener('mouseenter', () => cursorDot.classList.add('hovering'));
+            el.addEventListener('mouseleave', () => cursorDot.classList.remove('hovering'));
+        });
+
+        // --- Scroll Progress Bar (Gamification XP) ---
+        const scrollProgress = document.getElementById('scroll-progress');
+        window.addEventListener('scroll', () => {
+            const h = document.documentElement;
+            const b = document.body;
+            const st = 'scrollTop';
+            const sh = 'scrollHeight';
+            let progress = (h[st]||b[st]) / ((h[sh]||b[sh]) - h.clientHeight) * 100;
+            scrollProgress.style.width = progress + '%';
+        });
+
+        // --- Magnetic Buttons ---
+        document.querySelectorAll('.magnetic').forEach(btn => {
+            btn.addEventListener('mousemove', (e) => {
+                const rect = btn.getBoundingClientRect();
+                const x = e.clientX - rect.left - rect.width / 2;
+                const y = e.clientY - rect.top - rect.height / 2;
+                btn.style.transform = `translate(${x * 0.2}px, ${y * 0.3}px)`;
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.transform = 'translate(0px, 0px)';
+            });
+        });
+
+        // --- 3D Hero Scene ---
+        const canvas = document.getElementById('hero-canvas');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+        const pointLight = new THREE.PointLight(0x00E5FF, 1, 100);
+        pointLight.position.set(-10, -10, -10);
+        scene.add(pointLight);
+        const spotLight = new THREE.SpotLight(0xffffff, 1);
+        spotLight.position.set(10, 10, 10);
+        scene.add(spotLight);
+
+        const geometry = new THREE.IcosahedronGeometry(1.5, 4);
+        const material = new THREE.MeshStandardMaterial({ color: 0x3B82F6, emissive: 0x111827, roughness: 0.2, metalness: 0.8 });
+        const sphere = new THREE.Mesh(geometry, material);
+        scene.add(sphere);
+
+        const torusGeo = new THREE.TorusGeometry(0.5, 0.2, 16, 32);
+        const torusMat = new THREE.MeshStandardMaterial({ color: 0x00E5FF, emissive: 0x00E5FF, emissiveIntensity: 0.5, metalness: 0.9, roughness: 0.1 });
+        const torus = new THREE.Mesh(torusGeo, torusMat);
+        torus.position.set(3, 1, -2);
+        scene.add(torus);
+
+        const boxGeo = new THREE.BoxGeometry(1, 1, 1);
+        const boxMat = new THREE.MeshStandardMaterial({ color: 0xF8FAFC, metalness: 0.6, roughness: 0.2 });
+        const box = new THREE.Mesh(boxGeo, boxMat);
+        box.position.set(-3, -1, -1);
+        scene.add(box);
+
+        const particlesGeo = new THREE.BufferGeometry();
+        const particlesCount = 2000;
+        const posArray = new Float32Array(particlesCount * 3);
+        for(let i = 0; i < particlesCount * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 20;
+        }
+        particlesGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const particlesMaterial = new THREE.PointsMaterial({ transparent: true, color: 0x94A3B8, size: 0.02, sizeAttenuation: true, depthWrite: false });
+        const particles = new THREE.Points(particlesGeo, particlesMaterial);
+        scene.add(particles);
+
+        camera.position.z = 6;
+
+        let mouseX = 0;
+        let mouseY = 0;
+        document.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+            mouseY = -(e.clientY / window.innerHeight - 0.5) * 2;
+        });
+
+        const animate = () => {
+            requestAnimationFrame(animate);
+            sphere.rotation.x += 0.005;
+            sphere.rotation.y += 0.005;
+            sphere.rotation.z += 0.001;
+            torus.rotation.x += 0.01;
+            torus.rotation.y += 0.01;
+            box.rotation.x += 0.005;
+            box.rotation.y -= 0.005;
+            particles.rotation.y += 0.0005;
+            particles.rotation.x += 0.0002;
+            camera.position.x += (mouseX * 0.5 - camera.position.x) * 0.05;
+            camera.position.y += (mouseY * 0.5 - camera.position.y) * 0.05;
+            camera.lookAt(scene.position);
+            renderer.render(scene, camera);
+        };
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // --- GSAP Animations ---
+        gsap.registerPlugin(ScrollTrigger);
+
+        gsap.to(".reveal", {
+            opacity: 1, y: 0, duration: 1, stagger: 0.15, ease: "power3.out", delay: 0.3
+        });
+        gsap.set(".reveal", { opacity: 0, y: 30 });
+
+        gsap.utils.toArray("section:not(:first-child) .reveal").forEach(el => {
+            gsap.to(el, {
+                opacity: 1, y: 0, duration: 1,
+                scrollTrigger: { trigger: el, start: "top 85%", toggleActions: "play none none none" }
+            });
+        });
+
+        // Process Line & Bubble Gamification
+        gsap.to("#process-line", {
+            width: "100%", ease: "none",
+            scrollTrigger: { trigger: "#process", start: "top 50%", end: "bottom 80%", scrub: 1,
+                onUpdate: (self) => {
+                    const activeStep = Math.floor(self.progress * 7); // 7 steps
+                    document.querySelectorAll('.process-bubble').forEach((bubble, index) => {
+                        if(index <= activeStep) bubble.classList.add('active');
+                        else bubble.classList.remove('active');
+                    });
+                }
+            }
+        });
+
+        // Count Up Gamification
+        document.querySelectorAll('.count-up').forEach(counter => {
+            const target = +counter.getAttribute('data-target');
+            ScrollTrigger.create({
+                trigger: counter,
+                start: 'top 80%',
+                onEnter: () => {
+                    gsap.to(counter, {
+                        duration: 2,
+                        innerText: target,
+                        snap: { innerText: 1 },
+                        ease: "power2.out"
+                    });
+                },
+                onLeaveBack: () => { counter.innerText = 0; }
+            });
+        });
+
+        // Navbar Scroll Effect
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 20) {
+                navbar.classList.add('bg-primary/80', 'backdrop-blur-xl', 'border-b', 'border-white/5');
+            } else {
+                navbar.classList.remove('bg-primary/80', 'backdrop-blur-xl', 'border-b', 'border-white/5');
+            }
+        });
+    </script>
+</body>
+</html>
